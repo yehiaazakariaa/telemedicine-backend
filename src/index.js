@@ -1,41 +1,29 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
-const authRoutes = require('./routes/auth');
-const doctorsRoutes = require('./routes/doctors');
-const appointmentsRoutes = require('./routes/appointments');
+const pool = require('./db/pool'); // Ensure this path is correct
+const doctorRoutes = require('./routes/doctor'); // Ensure this path is correct
 
 const app = express();
 
-const cors = require('cors');
-
-// This allows your live frontend to talk to this backend
-app.use(cors({
-  origin: 'https://telemedicine-frontend-tm8p-seven.vercel.app',
-  credentials: true
-}));
+// 1. DYNAMIC CORS (The Fix)
+app.use(cors()); 
 app.use(express.json());
 
-// Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/doctors', doctorsRoutes);
-app.use('/api/appointments', appointmentsRoutes);
-
-// 404 handler
-app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
+// 2. HEALTH CHECK (To test if the function lives)
+app.get('/', (req, res) => {
+  res.send('Telemedicine API is Running...');
 });
 
+// 3. ROUTES
+app.use('/api/doctors', doctorRoutes);
 
-
+// 4. ERROR HANDLING (Prevents the 'Function Crashed' screen)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
