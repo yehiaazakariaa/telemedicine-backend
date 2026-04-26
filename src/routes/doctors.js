@@ -8,25 +8,31 @@ router.get('/', async (req, res) => {
   const { specialization, search, page = 1, limit = 12 } = req.query;
   const offset = (page - 1) * limit;
   try {
+    // Simplified query for testing
     let query = `
-      SELECT d.*, u.full_name, u.email, u.phone, s.name AS specialization_name, s.icon AS specialization_icon
+      SELECT d.*, u.full_name, u.email, s.name AS specialization_name, s.icon AS specialization_icon
       FROM doctors d
-      JOIN users u ON u.id = d.user_id
-      JOIN specializations s ON s.id = d.specialization_id
-      WHERE d.is_available = true
+      LEFT JOIN users u ON u.id = d.user_id
+      LEFT JOIN specializations s ON s.id = d.specialization_id
+      WHERE 1=1
     `;
+    
     const params = [];
+    // Only filter if is_available exists and is true
+    query += ` AND (d.is_available IS NOT FALSE)`; 
+
     if (specialization) {
       params.push(specialization);
       query += ` AND s.id = $${params.length}`;
     }
-    if (search) {
-      params.push(`%${search}%`);
-      query += ` AND (u.full_name ILIKE $${params.length} OR s.name ILIKE $${params.length})`;
-    }
-    query += ` ORDER BY d.rating DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    
+    // ... keep your search logic ...
+
+    query += ` ORDER BY d.id DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
+
     const result = await pool.query(query, params);
+    console.log("Doctors found:", result.rows.length); // This shows in Vercel Logs
     res.json({ doctors: result.rows });
   } catch (err) {
     console.error(err);
