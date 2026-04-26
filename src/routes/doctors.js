@@ -5,10 +5,8 @@ const authMiddleware = require('../middleware/auth');
 
 // Get all doctors with optional filters
 router.get('/', async (req, res) => {
-  const { specialization, search, page = 1, limit = 12 } = req.query;
-  const offset = (page - 1) * limit;
-
   try {
+    const { specialization, search } = req.query;
     let query = `
       SELECT d.*, u.full_name, s.name AS specialization_name, s.icon AS specialization_icon
       FROM doctors d
@@ -29,15 +27,13 @@ router.get('/', async (req, res) => {
       query += ` AND (u.full_name ILIKE $${params.length} OR s.name ILIKE $${params.length})`;
     }
 
-    // Fix: We push limit and offset into the array first so the numbers match
-    params.push(parseInt(limit), parseInt(offset));
-    query += ` ORDER BY d.rating DESC LIMIT $${params.length - 1} OFFSET $${params.length}`;
+    query += ` ORDER BY d.rating DESC`;
 
     const result = await pool.query(query, params);
     res.json({ doctors: result.rows });
   } catch (err) {
-    console.error("DATABASE ERROR:", err);
-    res.status(500).json({ error: 'Server error' });
+    console.error("DATABASE ERROR:", err.message); // This will show the real error in Vercel logs
+    res.status(500).json({ error: 'Server error', details: err.message }); 
   }
 });
 
