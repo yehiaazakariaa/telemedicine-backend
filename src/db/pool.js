@@ -1,19 +1,11 @@
 const { Pool } = require('pg');
 
+// This is the simplest way to connect. 
+// If DATABASE_URL exists in Vercel, it uses it.
 const pool = new Pool({
-  // This line forces the code to use the URL or fail gracefully
-  connectionString: process.env.DATABASE_URL, 
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
-  }
-});
-
-// Add this test to your log
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error("❌ DATABASE CONNECTION FAILED:", err.message);
-  } else {
-    console.log("✅ DATABASE CONNECTED SUCCESSFULLY");
   }
 });
 
