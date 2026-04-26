@@ -1,14 +1,19 @@
 const { Pool } = require('pg');
 
-// Force the connection string to be read
-const dbUrl = process.env.DATABASE_URL;
-
-console.log("System Check: DATABASE_URL is", dbUrl ? "FOUND" : "NOT FOUND");
-
 const pool = new Pool({
-  connectionString: dbUrl,
+  // This line forces the code to use the URL or fail gracefully
+  connectionString: process.env.DATABASE_URL, 
   ssl: {
     rejectUnauthorized: false
+  }
+});
+
+// Add this test to your log
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error("❌ DATABASE CONNECTION FAILED:", err.message);
+  } else {
+    console.log("✅ DATABASE CONNECTED SUCCESSFULLY");
   }
 });
 
