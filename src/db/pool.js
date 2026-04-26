@@ -1,20 +1,17 @@
 const { Pool } = require('pg');
 
-// This logic forces the app to use the Neon URL if it exists
+// Create the pool instance
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false // This is MANDATORY for Neon/Vercel connections
+    rejectUnauthorized: false // This is CRITICAL for Vercel + Neon
   }
 });
 
-// Add this to your code to see what the backend is actually trying to connect to in the logs
-console.log('Connecting to database with URL:', process.env.DATABASE_URL ? 'URL found' : 'URL NOT FOUND - using default');
-
-pool.connect((err) => {
-  if (err) {
-    console.error('Database connection error:', err.stack);
-  } else {
-    console.log('Successfully connected to Neon PostgreSQL');
-  }
+// Test connection and log errors to Vercel
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
 });
+
+// Export the pool directly so 'pool.query' works in your doctor.js
+module.exports = pool;
